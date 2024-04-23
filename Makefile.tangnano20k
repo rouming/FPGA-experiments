@@ -1,0 +1,37 @@
+APICULA        ?= apicula
+YOSYS          ?= yosys/yosys
+NEXTPNR        ?= nextpnr/nextpnr-himbaechel
+OPENFPGALOADER ?= openFPGALoader/build/openFPGALoader
+GOWIN_PACK     ?= gowin_pack
+
+BOARD   ?= tangnano20k
+DEVICE  ?= GW2AR-LV18QN88C8/I7
+FAMILY  ?= GW2A-18C
+LEDS_NR ?= 6
+
+PROJECT = square-wave
+square-wave_SRCS = square-wave.v debouncer.v
+
+
+all: $(PROJECT:=.fs)
+
+flash: $(PROJECT:=.fs)
+	$(OPENFPGALOADER) -b $(BOARD) $<
+
+%.fs: %.json.pnr
+	$(GOWIN_PACK) -d $(FAMILY) -o $@ $<
+
+%.json.pnr: %.json $(APICULA)/examples/himbaechel/$(BOARD).cst
+	$(NEXTPNR) --json $< --write $@ --device $(DEVICE) --vopt family=$(FAMILY) --vopt cst=$(APICULA)/examples/himbaechel/$(BOARD).cst
+
+.SECONDEXPANSION:
+%.json: $$(%_SRCS)
+	$(YOSYS) -D LEDS_NR=$(LEDS_NR) -p "read_verilog $^; synth_gowin -json $@"
+
+clean:
+	$(RM) $(PROJECT:=.fs) $(PROJECT:=.json) $(PROJECT:=.json.pnr)
+
+# Don't delete intermediate files
+.PRECIOUS: %.json %.json.pnr
+
+.PHONY: clean

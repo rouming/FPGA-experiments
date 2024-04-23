@@ -1,0 +1,9 @@
+*~
+*.fs
+*.json
+*.json.pnr
+yosys
+GOWIN
+apicula
+nextpnr
+openFPGALoader
