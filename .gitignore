@@ -2,6 +2,7 @@
 *.fs
 *.json
 *.json.pnr
+out
 yosys
 GOWIN
 apicula
